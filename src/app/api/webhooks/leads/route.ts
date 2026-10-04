@@ -39,59 +39,60 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // We are using your provided key here
     );
 
-    // AI Enrichment & Extraction: Parse the email body and score the lead automatically!
-    let aiScore = 0;
-    let aiStatus = "New";
+    // 1. FAST REGEX EXTRACTION (Guaranteed to work for your website form emails)
     let finalCompanyName = company_name;
     let finalEmail = contact_email;
     let finalPhone = "";
     let finalProduct = "";
     let finalMessage = "";
 
+    const nameMatch = extra_info.match(/Name:\s*(.+)/i);
+    if (nameMatch) finalCompanyName = nameMatch[1].trim();
+
+    const emailMatch = extra_info.match(/Email:\s*([^\s\n]+)/i);
+    // Sometimes it extracts the markdown link like [email](mailto:email), so we clean it:
+    if (emailMatch) {
+      let rawEmail = emailMatch[1].trim();
+      rawEmail = rawEmail.replace(/^\[.*\]\(mailto:/, '').replace(/\)$/, '');
+      finalEmail = rawEmail;
+    }
+
+    const phoneMatch = extra_info.match(/Phone:\s*(.+)/i);
+    if (phoneMatch) finalPhone = phoneMatch[1].trim();
+
+    const productMatch = extra_info.match(/Product:\s*(.+)/i);
+    if (productMatch) finalProduct = productMatch[1].trim();
+
+    const msgMatch = extra_info.match(/Message:\s*(.+)/i);
+    if (msgMatch) finalMessage = msgMatch[1].trim();
+
+    // 2. AI ENRICHMENT (Only used to score the lead now)
+    let aiScore = 0;
+    let aiStatus = "New";
+
     if (process.env.AI_PROVIDER_API_KEY) {
       try {
         const ai = getAIProvider();
         const analysis = await ai.generateStructuredOutput<{
           score: number, 
-          priority: string,
-          extracted_name: string,
-          extracted_email: string,
-          extracted_phone: string,
-          extracted_product: string,
-          extracted_message: string
+          priority: string
         }>(
-          `Analyze this incoming B2B lead for Lush Trade Corp. 
-           Read the raw email body below and extract the details if they exist.
-           
-           Raw Email Body: ${extra_info}
+          `Analyze this incoming B2B lead. 
+           Name: ${finalCompanyName}
+           Product: ${finalProduct}
+           Message: ${finalMessage}
            
            Return JSON with:
-           - "score" (0-100)
-           - "priority" ("High", "Medium", "Low")
-           - "extracted_name" (The real name of the lead)
-           - "extracted_email" (The real email)
-           - "extracted_phone" (The phone number, if any)
-           - "extracted_product" (The product they are interested in, if any)
-           - "extracted_message" (A brief 1-2 sentence summary of their actual message/inquiry)`,
+           - "score" (0-100) based on how likely they are to buy.
+           - "priority" ("High", "Medium", "Low")`,
           null
         );
         
         aiScore = analysis.score || 0;
         aiStatus = analysis.priority === "High" ? "Hot Lead" : "New";
         
-        // If the AI found real details, override Make.com's metadata
-        if (analysis.extracted_name && analysis.extracted_name.length > 2) {
-          finalCompanyName = analysis.extracted_name;
-        }
-        if (analysis.extracted_email && analysis.extracted_email.includes("@")) {
-          finalEmail = analysis.extracted_email;
-        }
-        finalPhone = analysis.extracted_phone || "";
-        finalProduct = analysis.extracted_product || "";
-        finalMessage = analysis.extracted_message || "";
-        
       } catch (e) {
-        console.error("AI scoring/parsing failed during webhook:", e);
+        console.error("AI scoring failed during webhook:", e);
       }
     }
 
