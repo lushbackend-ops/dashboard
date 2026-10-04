@@ -1,9 +1,12 @@
 "use client";
 
+import React, { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Users, Globe2, MessageSquare, ArrowUpRight } from "lucide-react";
 
 export function DashboardClient({ leads }: { leads: any[] }) {
+  const [expandedLead, setExpandedLead] = useState<string | null>(null);
+
   // Aggregate real data
   const totalLeads = leads.length;
   
@@ -86,28 +89,65 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {leads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-secondary/30 transition-colors group">
-                      <td className="py-2.5 font-medium">{lead.company_name}</td>
-                      <td className="py-2.5 text-secondary-foreground">{lead.contact_email || "N/A"}</td>
-                      <td className="py-2.5">
-                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-md border border-primary/20">
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-right font-medium flex justify-end gap-3 items-center">
-                        <span>{lead.score}</span>
-                        <button 
-                          onClick={async () => {
-                            const { deleteLead } = await import("./actions");
-                            await deleteLead(lead.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 text-destructive/60 hover:text-destructive transition-all"
-                          title="Delete Lead"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                        </button>
-                      </td>
-                    </tr>
+                    <React.Fragment key={lead.id}>
+                      <tr 
+                        className="hover:bg-secondary/30 transition-colors group cursor-pointer"
+                        onClick={() => setExpandedLead(expandedLead === lead.id ? null : lead.id)}
+                      >
+                        <td className="py-2.5 font-medium flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-secondary-foreground transition-transform ${expandedLead === lead.id ? 'rotate-90' : ''}`}><polyline points="9 18 15 12 9 6"/></svg>
+                          {lead.company_name}
+                        </td>
+                        <td className="py-2.5 text-secondary-foreground">{lead.contact_email || "N/A"}</td>
+                        <td className="py-2.5">
+                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-[11px] rounded-md border border-primary/20">
+                            {lead.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-right font-medium flex justify-end gap-3 items-center">
+                          <span>{lead.score}</span>
+                          <button 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const { deleteLead } = await import("./actions");
+                              await deleteLead(lead.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 text-destructive/60 hover:text-destructive transition-all"
+                            title="Delete Lead"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedLead === lead.id && (
+                        <tr className="bg-secondary/10">
+                          <td colSpan={4} className="p-4 border-l-2 border-primary">
+                            <div className="grid grid-cols-2 gap-4 text-[13px]">
+                              <div>
+                                <p className="text-secondary-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Phone Number</p>
+                                <p className="font-medium">{lead.phone || "Not provided"}</p>
+                              </div>
+                              <div>
+                                <p className="text-secondary-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Product Interest</p>
+                                <p className="font-medium">{lead.product || "Unknown"}</p>
+                              </div>
+                              <div className="col-span-2">
+                                <p className="text-secondary-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">AI Summary / Message</p>
+                                <p className="text-foreground/90 bg-background border border-border p-3 rounded-md italic">
+                                  {lead.message || "No message found."}
+                                </p>
+                              </div>
+                              <div className="col-span-2 flex items-center justify-between mt-2 pt-3 border-t border-dashed border-border/50 text-secondary-foreground">
+                                <span className="text-[11px] flex items-center gap-1.5">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                  Received on: {new Date(lead.created_at).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

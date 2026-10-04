@@ -44,6 +44,9 @@ export async function POST(req: Request) {
     let aiStatus = "New";
     let finalCompanyName = company_name;
     let finalEmail = contact_email;
+    let finalPhone = "";
+    let finalProduct = "";
+    let finalMessage = "";
 
     if (process.env.AI_PROVIDER_API_KEY) {
       try {
@@ -52,32 +55,40 @@ export async function POST(req: Request) {
           score: number, 
           priority: string,
           extracted_name: string,
-          extracted_email: string
+          extracted_email: string,
+          extracted_phone: string,
+          extracted_product: string,
+          extracted_message: string
         }>(
           `Analyze this incoming B2B lead for Lush Trade Corp. 
-           Make.com sent this Name: ${company_name} and Email: ${contact_email}. 
-           HOWEVER, read the raw email body below and extract the REAL Name and REAL Email if they exist.
+           Read the raw email body below and extract the details if they exist.
            
            Raw Email Body: ${extra_info}
            
            Return JSON with:
            - "score" (0-100)
            - "priority" ("High", "Medium", "Low")
-           - "extracted_name" (The real name of the lead, e.g., 'Siddharth Vishwakarma')
-           - "extracted_email" (The real email, e.g., 'siddharthv210106@gmail.com')`,
+           - "extracted_name" (The real name of the lead)
+           - "extracted_email" (The real email)
+           - "extracted_phone" (The phone number, if any)
+           - "extracted_product" (The product they are interested in, if any)
+           - "extracted_message" (A brief 1-2 sentence summary of their actual message/inquiry)`,
           null
         );
         
         aiScore = analysis.score || 0;
         aiStatus = analysis.priority === "High" ? "Hot Lead" : "New";
         
-        // If the AI found a real name/email in the body, override Make.com's metadata
+        // If the AI found real details, override Make.com's metadata
         if (analysis.extracted_name && analysis.extracted_name.length > 2) {
           finalCompanyName = analysis.extracted_name;
         }
         if (analysis.extracted_email && analysis.extracted_email.includes("@")) {
           finalEmail = analysis.extracted_email;
         }
+        finalPhone = analysis.extracted_phone || "";
+        finalProduct = analysis.extracted_product || "";
+        finalMessage = analysis.extracted_message || "";
         
       } catch (e) {
         console.error("AI scoring/parsing failed during webhook:", e);
@@ -91,6 +102,9 @@ export async function POST(req: Request) {
         {
           company_name: finalCompanyName,
           contact_email: finalEmail,
+          phone: finalPhone,
+          product: finalProduct,
+          message: finalMessage,
           score: aiScore,
           status: aiStatus,
           // If you ever add a "source" column to your DB, you can uncomment the line below:
