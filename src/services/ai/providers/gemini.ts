@@ -1,8 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { AIContext, AIProvider, AnalysisResult, ResearchResult } from "../types";
+import { logUsage } from "../../usageTracker";
 
 export class GeminiProvider implements AIProvider {
   private ais: GoogleGenAI[];
+  private keys: string[];
   private currentKeyIndex = 0;
 
   constructor() {
@@ -17,15 +19,19 @@ export class GeminiProvider implements AIProvider {
 
     if (keys.length === 0) keys = [""]; // fallback
 
+    this.keys = keys;
     this.ais = keys.map(key => new GoogleGenAI({ apiKey: key }));
   }
 
   async generateText(prompt: string, context?: AIContext): Promise<string> {
     let retries = Math.max(3, this.ais.length);
     let delay = 3000;
+    let lastError: any = null;
     while (retries > 0) {
       try {
         const ai = this.ais[this.currentKeyIndex];
+        const key = this.keys[this.currentKeyIndex];
+        
         const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
@@ -34,8 +40,12 @@ export class GeminiProvider implements AIProvider {
             temperature: context?.temperature || 0.7,
           },
         });
+        
+        await logUsage(key);
+        
         return response.text || "";
       } catch (error: any) {
+        lastError = error;
         const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
         
         if (isQuotaError && this.ais.length > 1) {
@@ -55,12 +65,13 @@ export class GeminiProvider implements AIProvider {
         }
       }
     }
-    return "";
+    throw lastError || new Error("Failed to generate text after retries.");
   }
 
   async generateStructuredOutput<T>(prompt: string, schema: unknown, context?: AIContext): Promise<T> {
     let retries = Math.max(3, this.ais.length);
     let delay = 3000;
+    let lastError: any = null;
     while (retries > 0) {
       try {
         const ai = this.ais[this.currentKeyIndex];
@@ -74,11 +85,14 @@ export class GeminiProvider implements AIProvider {
           },
         });
         
+        await logUsage(key);
+        
         let rawText = response.text || "{}";
         rawText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         
         return JSON.parse(rawText) as T;
       } catch (error: any) {
+        lastError = error;
         const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
         
         if (isQuotaError && this.ais.length > 1) {
@@ -99,7 +113,7 @@ export class GeminiProvider implements AIProvider {
         }
       }
     }
-    throw new Error("Failed to generate structured output after retries.");
+    throw lastError || new Error("Failed to generate structured output after retries.");
   }
 
   async createEmbedding(text: string): Promise<number[]> {

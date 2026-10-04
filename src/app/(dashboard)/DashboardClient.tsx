@@ -102,7 +102,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
 
         <div className="p-6 border border-blue-500/20 rounded-[24px] relative overflow-hidden shadow-[0_8px_30px_rgba(59,130,246,0.2)] bg-gradient-to-br from-blue-500 to-blue-900 text-white">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-[14px] font-medium text-white/80">Website Sources</h3>
+            <h3 className="text-[14px] font-medium text-white/80">Website </h3>
             <Globe2 className="w-5 h-5 text-white" />
           </div>
           <div className="mt-3 flex items-baseline gap-3">
@@ -124,7 +124,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
         
         <div className="p-6 border border-cyan-500/20 rounded-[24px] relative overflow-hidden shadow-[0_8px_30px_rgba(6,182,212,0.2)] bg-gradient-to-br from-cyan-500 to-cyan-900 text-white">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-[14px] font-medium text-white/80">Social Finder</h3>
+            <h3 className="text-[14px] font-medium text-white/80">Social Media</h3>
             <Share2 className="w-5 h-5 text-white" />
           </div>
           <div className="mt-3 flex items-baseline gap-3">

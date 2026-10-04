@@ -1,13 +1,28 @@
 "use client";
-import { useActionState, useState } from "react";
-import { findLeads, saveLeadToCRM } from "./actions";
-import { Plus, X, Building, Mail, Phone, Box } from "lucide-react";
+import { useActionState, useState, useEffect } from "react";
+import { findLeads, saveLeadToCRM, getSuggestedLeads } from "./actions";
+import { Plus, X, Building, Mail, Phone, Box, MapPin, Loader2 } from "lucide-react";
 
 export default function LeadFinder() {
   const [state, formAction, isPending] = useActionState(findLeads, null);
   const [savedLeads, setSavedLeads] = useState<Set<string>>(new Set());
   const [discardedLeads, setDiscardedLeads] = useState<Set<string>>(new Set());
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
+  const [suggestedLeads, setSuggestedLeads] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
+
+  useEffect(() => {
+    async function loadSuggestions() {
+      const leads = await getSuggestedLeads();
+      if (leads) {
+        setSuggestedLeads(leads);
+      } else {
+        setSuggestedLeads(FALLBACK_LEADS);
+      }
+      setLoadingSuggestions(false);
+    }
+    loadSuggestions();
+  }, []);
 
   const handleSave = async (lead: any, index: number, isSuggested = false) => {
     const key = `${lead.company_name}-${index}${isSuggested ? '-sug' : ''}`;
@@ -26,9 +41,10 @@ export default function LeadFinder() {
     setDiscardedLeads(new Set(discardedLeads).add(key));
   };
 
-  const SUGGESTED_LEADS = [
+  const FALLBACK_LEADS = [
     {
       company_name: "FreshFoods Wholesale",
+      location: "San Francisco, CA, USA",
       contact_email: "buyer@freshfoodswholesale.com",
       phone: "+1 800 555 1234",
       product: "Organic Cashews",
@@ -36,10 +52,19 @@ export default function LeadFinder() {
     },
     {
       company_name: "Global Tech Logistics",
+      location: "London, UK",
       contact_email: "supply@gtlogistics.co",
       phone: "+44 20 7123 4567",
       product: "Warehouse Machinery",
       message: "Seeking new vendors for our European distribution centers."
+    },
+    {
+      company_name: "Apex Manufacturing Solutions",
+      location: "Berlin, Germany",
+      contact_email: "procurement@apex-mfg.de",
+      phone: "+49 30 9876 5432",
+      product: "Industrial Sensors",
+      message: "Looking for reliable suppliers of high-precision temperature sensors."
     }
   ];
 
@@ -78,7 +103,12 @@ export default function LeadFinder() {
           {leadsToDisplay ? "Discovered Leads:" : "Suggested Potential Leads:"}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(leadsToDisplay || SUGGESTED_LEADS).map((lead: any, index: number) => {
+          {!leadsToDisplay && loadingSuggestions ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-10 text-secondary-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+              <p>Generating AI suggestions...</p>
+            </div>
+          ) : (leadsToDisplay || suggestedLeads).map((lead: any, index: number) => {
             const isSuggested = !leadsToDisplay;
             const key = `${lead.company_name}-${index}${isSuggested ? '-sug' : ''}`;
             if (discardedLeads.has(key)) return null;
@@ -99,6 +129,7 @@ export default function LeadFinder() {
                     {lead.company_name}
                   </h4>
                   <div className="mt-2 space-y-1.5 text-sm text-secondary-foreground">
+                    {lead.location && <p className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> {lead.location}</p>}
                     <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {lead.contact_email}</p>
                     <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {lead.phone}</p>
                     <p className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {lead.product}</p>

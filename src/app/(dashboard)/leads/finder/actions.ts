@@ -21,13 +21,14 @@ export async function findLeads(prevState: any, formData: FormData) {
         company_name: string;
         contact_email: string;
         phone: string;
+        location:string;
         product: string;
         message: string;
       }>
     }>(
       `Generate 3 highly realistic, professional B2B leads based on this market query: "${query}" in the "${category}" industry.
        Make them look like real companies operating in the ${category} sector. 
-       Return JSON with an array called "leads". Each lead must have company_name, contact_email, phone, product, and message.`,
+       Return JSON with an array called "leads". Each lead must have company_name, contact_email, phone, location, product, and message.`,
       null
     );
   } catch (error: any) {
@@ -75,4 +76,32 @@ export async function saveLeadToCRM(lead: {
   
   revalidatePath("/");
   revalidatePath("/crm");
+}
+
+export async function getSuggestedLeads() {
+  if (!process.env.AI_PROVIDER_API_KEY) {
+    return null;
+  }
+  const ai = getAIProvider();
+  try {
+    const data = await ai.generateStructuredOutput<{
+      leads: Array<{
+        company_name: string;
+        contact_email: string;
+        phone: string;
+        location: string;
+        product: string;
+        message: string;
+      }>
+    }>(
+      `Generate 3 highly realistic, professional B2B leads that could serve as diverse, interesting examples. 
+       Make them look like real companies from various industries. 
+       Return JSON with an array called "leads". Each lead must have company_name, contact_email, phone, location, product, and message.`,
+      null
+    );
+    return data?.leads || null;
+  } catch (error) {
+    console.error("AI Error generating suggestions:", error);
+    return null;
+  }
 }
