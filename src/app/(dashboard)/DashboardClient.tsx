@@ -86,7 +86,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {leads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-secondary/30 transition-colors">
+                    <tr key={lead.id} className="hover:bg-secondary/30 transition-colors group">
                       <td className="py-2.5 font-medium">{lead.company_name}</td>
                       <td className="py-2.5 text-secondary-foreground">{lead.contact_email || "N/A"}</td>
                       <td className="py-2.5">
@@ -94,7 +94,19 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                           {lead.status}
                         </span>
                       </td>
-                      <td className="py-2.5 text-right font-medium">{lead.score}</td>
+                      <td className="py-2.5 text-right font-medium flex justify-end gap-3 items-center">
+                        <span>{lead.score}</span>
+                        <button 
+                          onClick={async () => {
+                            const { deleteLead } = await import("./actions");
+                            await deleteLead(lead.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-destructive/60 hover:text-destructive transition-all"
+                          title="Delete Lead"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
