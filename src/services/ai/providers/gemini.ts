@@ -50,7 +50,12 @@ export class GeminiProvider implements AIProvider {
             responseMimeType: "application/json",
           },
         });
-        return JSON.parse(response.text || "{}") as T;
+        
+        // Fix: Clean markdown block formatting before parsing JSON
+        let rawText = response.text || "{}";
+        rawText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        return JSON.parse(rawText) as T;
       } catch (error: any) {
         if ((error?.status === 503 || error?.message?.includes("503")) && retries > 1) {
           console.warn(`Gemini 503 error, retrying in ${delay/1000}s...`);
@@ -58,6 +63,7 @@ export class GeminiProvider implements AIProvider {
           retries--;
           delay *= 2;
         } else {
+          console.error("Gemini Parse Error:", error);
           throw error;
         }
       }
