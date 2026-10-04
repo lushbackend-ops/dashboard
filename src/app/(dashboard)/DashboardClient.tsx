@@ -10,19 +10,27 @@ export function DashboardClient({ leads }: { leads: any[] }) {
   // Aggregate real data
   const totalLeads = leads.length;
   
-  // Categorize based on some heuristic or real columns if they exist.
-  // Since we don't have source/category in schema yet, we group by status as a proxy for the charts.
-  const statusCounts = leads.reduce((acc, lead) => {
-    acc[lead.status || "New"] = (acc[lead.status || "New"] || 0) + 1;
+  // Calculate Leads Today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const leadsToday = leads.filter(l => new Date(l.created_at) >= today).length;
+
+  // Group leads by Date for the Area Chart
+  const leadsByDate = leads.reduce((acc, lead) => {
+    const date = new Date(lead.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    acc[date] = (acc[date] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const pieData = Object.keys(statusCounts).map((key) => ({
-    name: key,
-    value: statusCounts[key]
+  const timelineData = Object.keys(leadsByDate).reverse().map((date) => ({
+    date,
+    Leads: leadsByDate[date]
   }));
 
-  const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444'];
+  // If there's only one data point or no data points, inject some placeholder dates just to make the chart look like a timeline
+  if (timelineData.length === 1) {
+    timelineData.unshift({ date: "Yesterday", Leads: 0 });
+  }
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
@@ -35,7 +43,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-card p-5 border border-border rounded-lg relative overflow-hidden">
           <div className="flex justify-between items-start">
             <h3 className="text-[13px] font-semibold text-secondary-foreground border-b border-dotted border-border pb-0.5 inline-block">Total Leads</h3>
@@ -49,11 +57,22 @@ export function DashboardClient({ leads }: { leads: any[] }) {
 
         <div className="bg-card p-5 border border-border rounded-lg relative overflow-hidden">
           <div className="flex justify-between items-start">
+            <h3 className="text-[13px] font-semibold text-secondary-foreground border-b border-dotted border-border pb-0.5 inline-block">Leads Today</h3>
+            <ArrowUpRight className="w-4 h-4 text-secondary-foreground" />
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-foreground">{leadsToday}</span>
+            <span className="text-[12px] text-secondary-foreground">New today</span>
+          </div>
+        </div>
+
+        <div className="bg-card p-5 border border-border rounded-lg relative overflow-hidden">
+          <div className="flex justify-between items-start">
             <h3 className="text-[13px] font-semibold text-secondary-foreground border-b border-dotted border-border pb-0.5 inline-block">Website Sources</h3>
             <Globe2 className="w-4 h-4 text-secondary-foreground" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">{Math.floor(totalLeads * 0.6)}</span>
+            <span className="text-2xl font-bold text-foreground">{totalLeads}</span>
           </div>
         </div>
 
@@ -63,7 +82,8 @@ export function DashboardClient({ leads }: { leads: any[] }) {
             <MessageSquare className="w-4 h-4 text-secondary-foreground" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">{Math.floor(totalLeads * 0.4)}</span>
+            <span className="text-2xl font-bold text-foreground">0</span>
+            <span className="text-[12px] text-secondary-foreground">Coming soon</span>
           </div>
         </div>
       </div>
@@ -84,7 +104,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                     <th className="pb-2 font-medium">Company</th>
                     <th className="pb-2 font-medium">Email</th>
                     <th className="pb-2 font-medium">Status</th>
-                    <th className="pb-2 font-medium text-right">Score</th>
+                    <th className="pb-2 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -105,7 +125,6 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                           </span>
                         </td>
                         <td className="py-2.5 text-right font-medium flex justify-end gap-3 items-center">
-                          <span>{lead.score}</span>
                           <button 
                             onClick={async (e) => {
                               e.stopPropagation();
@@ -132,7 +151,7 @@ export function DashboardClient({ leads }: { leads: any[] }) {
                                 <p className="font-medium">{lead.product || "Unknown"}</p>
                               </div>
                               <div className="col-span-2">
-                                <p className="text-secondary-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">AI Summary / Message</p>
+                                <p className="text-secondary-foreground text-[11px] font-semibold uppercase tracking-wider mb-1">Message</p>
                                 <p className="text-foreground/90 bg-background border border-border p-3 rounded-md italic">
                                   {lead.message || "No message found."}
                                 </p>
@@ -155,45 +174,48 @@ export function DashboardClient({ leads }: { leads: any[] }) {
           )}
         </div>
 
-        {/* Lead Categories Chart */}
+        {/* Inbound Timeline Chart */}
         <div className="bg-card border border-border rounded-lg p-5">
-          <h2 className="text-[14px] font-semibold text-foreground mb-4">Lead Status Distribution</h2>
+          <h2 className="text-[14px] font-semibold text-foreground mb-4">Inbound Velocity</h2>
           <div className="h-[250px] w-full flex items-center justify-center">
-            {pieData.length === 0 ? (
+            {timelineData.length === 0 ? (
               <p className="text-sm text-secondary-foreground">No data to chart</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '6px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', fontSize: '13px' }}
+                <BarChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--secondary-foreground))', fontSize: 11 }}
+                    dy={10}
                   />
-                </PieChart>
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--secondary-foreground))', fontSize: 11 }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'hsl(var(--secondary)/0.5)' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      borderColor: 'hsl(var(--border))', 
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="Leads" 
+                    fill="hsl(var(--primary))" 
+                    radius={[4, 4, 0, 0]}
+                    barSize={40}
+                  />
+                </BarChart>
               </ResponsiveContainer>
             )}
           </div>
-          {pieData.length > 0 && (
-            <div className="flex flex-wrap gap-3 justify-center mt-2">
-              {pieData.map((entry, index) => (
-                <div key={entry.name} className="flex items-center gap-1.5 text-[12px] text-secondary-foreground">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                  {entry.name} ({entry.value})
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

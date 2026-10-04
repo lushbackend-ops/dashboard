@@ -66,35 +66,9 @@ export async function POST(req: Request) {
     const msgMatch = extra_info.match(/Message:\s*(.+)/i);
     if (msgMatch) finalMessage = msgMatch[1].trim();
 
-    // 2. AI ENRICHMENT (Only used to score the lead now)
+    // We no longer use AI for scoring as requested.
     let aiScore = 0;
     let aiStatus = "New";
-
-    if (process.env.AI_PROVIDER_API_KEY) {
-      try {
-        const ai = getAIProvider();
-        const analysis = await ai.generateStructuredOutput<{
-          score: number, 
-          priority: string
-        }>(
-          `Analyze this incoming B2B lead. 
-           Name: ${finalCompanyName}
-           Product: ${finalProduct}
-           Message: ${finalMessage}
-           
-           Return JSON with:
-           - "score" (0-100) based on how likely they are to buy.
-           - "priority" ("High", "Medium", "Low")`,
-          null
-        );
-        
-        aiScore = analysis.score || 0;
-        aiStatus = analysis.priority === "High" ? "Hot Lead" : "New";
-        
-      } catch (e) {
-        console.error("AI scoring failed during webhook:", e);
-      }
-    }
 
     // Insert into database
     const { data, error } = await supabase
