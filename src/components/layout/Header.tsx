@@ -1,4 +1,5 @@
 import { Bell, Menu, Search } from "lucide-react";
+import { ThemeToggle } from "../theme-toggle";
 
 export function Header() {
   return (
@@ -17,12 +18,13 @@ export function Header() {
         </div>
       </div>
       
-      <div className="flex items-center gap-4">
-        <button className="text-secondary-foreground hover:text-foreground relative">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <button className="text-secondary-foreground hover:text-foreground relative p-2 hover:bg-secondary/50 rounded-md transition-colors">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full"></span>
+          <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full"></span>
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-semibold text-sm">
+        <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-semibold text-sm ml-2">
           JD
         </div>
       </div>

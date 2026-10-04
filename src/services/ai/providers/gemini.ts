@@ -2,18 +2,31 @@ import { GoogleGenAI } from "@google/genai";
 import { AIContext, AIProvider, AnalysisResult, ResearchResult } from "../types";
 
 export class GeminiProvider implements AIProvider {
-  private ai: GoogleGenAI;
+  private ais: GoogleGenAI[];
+  private currentKeyIndex = 0;
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.AI_PROVIDER_API_KEY });
+    let keys = [process.env.AI_PROVIDER_API_KEY].filter(Boolean) as string[];
+    
+    if (process.env.AI_PROVIDER_API_KEYS) {
+      const splitKeys = process.env.AI_PROVIDER_API_KEYS.split(",").map(k => k.trim()).filter(Boolean);
+      if (splitKeys.length > 0) {
+        keys = splitKeys;
+      }
+    }
+
+    if (keys.length === 0) keys = [""]; // fallback
+
+    this.ais = keys.map(key => new GoogleGenAI({ apiKey: key }));
   }
 
   async generateText(prompt: string, context?: AIContext): Promise<string> {
-    let retries = 3;
+    let retries = Math.max(3, this.ais.length);
     let delay = 3000;
     while (retries > 0) {
       try {
-        const response = await this.ai.models.generateContent({
+        const ai = this.ais[this.currentKeyIndex];
+        const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
           config: {
@@ -23,6 +36,15 @@ export class GeminiProvider implements AIProvider {
         });
         return response.text || "";
       } catch (error: any) {
+        const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
+        
+        if (isQuotaError && this.ais.length > 1) {
+          console.warn(`[Key ${this.currentKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
+          this.currentKeyIndex = (this.currentKeyIndex + 1) % this.ais.length;
+          retries--;
+          continue; // Retry instantly with the new key
+        }
+
         if ((error?.status === 503 || error?.message?.includes("503")) && retries > 1) {
           console.warn(`Gemini 503 error, retrying in ${delay/1000}s...`);
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -37,11 +59,12 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateStructuredOutput<T>(prompt: string, schema: unknown, context?: AIContext): Promise<T> {
-    let retries = 3;
+    let retries = Math.max(3, this.ais.length);
     let delay = 3000;
     while (retries > 0) {
       try {
-        const response = await this.ai.models.generateContent({
+        const ai = this.ais[this.currentKeyIndex];
+        const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
           config: {
@@ -51,19 +74,27 @@ export class GeminiProvider implements AIProvider {
           },
         });
         
-        // Fix: Clean markdown block formatting before parsing JSON
         let rawText = response.text || "{}";
         rawText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         
         return JSON.parse(rawText) as T;
       } catch (error: any) {
+        const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
+        
+        if (isQuotaError && this.ais.length > 1) {
+          console.warn(`[Key ${this.currentKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
+          this.currentKeyIndex = (this.currentKeyIndex + 1) % this.ais.length;
+          retries--;
+          continue;
+        }
+
         if ((error?.status === 503 || error?.message?.includes("503")) && retries > 1) {
           console.warn(`Gemini 503 error, retrying in ${delay/1000}s...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           retries--;
           delay *= 2;
         } else {
-          console.error("Gemini Parse Error:", error);
+          console.error("Gemini Parse/API Error:", error);
           throw error;
         }
       }
@@ -72,7 +103,8 @@ export class GeminiProvider implements AIProvider {
   }
 
   async createEmbedding(text: string): Promise<number[]> {
-    const response = await this.ai.models.embedContent({
+    const ai = this.ais[this.currentKeyIndex];
+    const response = await ai.models.embedContent({
       model: "text-embedding-004",
       contents: text,
     });

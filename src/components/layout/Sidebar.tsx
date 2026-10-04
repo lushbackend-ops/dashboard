@@ -17,7 +17,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  
+
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "AI Brain", href: "/brain", icon: BrainCircuit },
@@ -33,33 +33,32 @@ export function Sidebar() {
   ];
 
   return (
-    <div className="hidden lg:flex lg:flex-col w-[260px] bg-white border-r border-border h-full">
-      <div className="flex h-14 items-center px-5 border-b border-border">
-        <div className="text-base font-semibold text-foreground flex items-center gap-2">
-          <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-primary-foreground text-xs">
+    <div className="hidden lg:flex lg:flex-col w-[260px] bg-background/80 backdrop-blur-xl border-r border-border/40 h-full relative z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]">
+      <div className="flex h-16 items-center px-6 border-b border-border/40">
+        <div className="text-[15px] font-semibold text-foreground flex items-center gap-3 tracking-tight">
+          <div className="w-7 h-7 bg-primary rounded-[8px] flex items-center justify-center text-primary-foreground text-xs shadow-sm shadow-primary/20">
             L
           </div>
           Lush Trade Corp
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto py-3">
-        <nav className="space-y-0.5 px-3">
+      <div className="flex-1 overflow-y-auto py-4">
+        <nav className="space-y-1 px-3">
           {navigation.map((item) => {
             const Icon = item.icon;
             // Check if active (exact match for home, startsWith for others)
-            const isActive = item.href === "/" 
-              ? pathname === "/" 
+            const isActive = item.href === "/"
+              ? pathname === "/"
               : pathname.startsWith(item.href);
-            
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
-                  isActive 
-                    ? "bg-accent text-accent-foreground border-l-2 border-primary"
-                    : "text-secondary-foreground hover:bg-secondary hover:text-foreground"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[14px] font-medium transition-all duration-200 ${isActive
+                    ? "bg-primary/10 text-primary shadow-sm"
+                    : "text-secondary-foreground hover:bg-secondary/60 hover:text-foreground"
+                  }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? "text-primary" : "text-secondary-foreground"}`} />
                 {item.name}
@@ -68,10 +67,10 @@ export function Sidebar() {
           })}
         </nav>
       </div>
-      <div className="p-3 border-t border-border">
+      <div className="p-4 border-t border-border/40">
         <Link
           href="/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium text-secondary-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[14px] font-medium text-secondary-foreground hover:bg-secondary/60 hover:text-foreground transition-all duration-200"
         >
           <Settings className="w-4 h-4 text-secondary-foreground" />
           Settings

@@ -6,11 +6,11 @@ import { revalidatePath } from "next/cache";
 export async function findLeads(prevState: any, formData: FormData) {
   const query = formData.get("query") as string;
   const category = formData.get("category") as string || "General B2B";
-  
+
   if (!process.env.AI_PROVIDER_API_KEY) {
     throw new Error("AI Provider API key not configured.");
   }
-  
+
   const ai = getAIProvider();
   let data = null;
 
@@ -40,13 +40,13 @@ export async function findLeads(prevState: any, formData: FormData) {
     }
     return { success: false, leads: null, error: errorMessage };
   }
-  
+
   if (!data || !data.leads || data.leads.length === 0) {
     return { success: false, leads: null, error: "AI returned an empty list. Try a different query." };
   }
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     leads: data.leads
   };
 }
@@ -64,7 +64,7 @@ export async function saveLeadToCRM(lead: {
     contact_email: lead.contact_email,
     phone: lead.phone,
     product: lead.product,
-    message: `[Source: AI Lead Finder] ${lead.message}`,
+    message: `[Source: Social Lead Finder] ${lead.message}`,
     status: "New",
     score: Math.floor(Math.random() * 40) + 60
   });
@@ -72,7 +72,7 @@ export async function saveLeadToCRM(lead: {
   if (error) {
     throw new Error(error.message);
   }
-  
+
   revalidatePath("/");
   revalidatePath("/crm");
 }

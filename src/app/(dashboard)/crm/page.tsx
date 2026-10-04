@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { Mail, Phone, Box, Calendar } from "lucide-react";
+import DeleteButton from "./DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,12 @@ export default async function CRM() {
                 <h3 className="font-semibold text-foreground truncate" title={lead.company_name}>
                   {lead.company_name}
                 </h3>
-                <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] uppercase font-bold rounded border border-primary/20 shrink-0">
-                  {lead.status || "New"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] uppercase font-bold rounded border border-primary/20 shrink-0">
+                    {lead.status || "New"}
+                  </span>
+                  <DeleteButton id={lead.id} />
+                </div>
               </div>
               
               <div className="space-y-2 text-[13px] text-secondary-foreground flex-1">

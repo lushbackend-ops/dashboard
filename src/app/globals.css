@@ -17,6 +17,23 @@
   --destructive: #ef4444;
 }
 
+.dark {
+  --background: #09090b; /* Very dark grayish black */
+  --foreground: #fafafa;
+  --card: #141417; /* Apple style deep dark card */
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --primary: #3b82f6; /* Keep primary blue visible */
+  --primary-foreground: #ffffff;
+  --secondary: #27272a;
+  --secondary-foreground: #a1a1aa;
+  --accent: #1e1e24; 
+  --accent-foreground: #60a5fa;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --destructive: #ef4444;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -41,13 +58,15 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 14px; /* Yafa compact default */
+  font-size: 15px; /* Slightly larger base font for better readability */
+  letter-spacing: -0.01em; /* Apple typography characteristic */
   -webkit-font-smoothing: antialiased;
 }
 
-/* Yafa-UI common surfaces */
+/* Apple-inspired surfaces */
 .bg-card {
   background-color: var(--card);
-  border-radius: 8px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border-radius: 20px; /* Apple uses large squircles */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); /* Soft, blurred, diffused shadows */
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }

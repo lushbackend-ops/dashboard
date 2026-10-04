@@ -7,18 +7,11 @@ export default function LeadFinder() {
   const [state, formAction, isPending] = useActionState(findLeads, null);
   const [savedLeads, setSavedLeads] = useState<Set<string>>(new Set());
   const [discardedLeads, setDiscardedLeads] = useState<Set<string>>(new Set());
-  const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
 
   const handleSave = async (lead: any, index: number, isSuggested = false) => {
     const key = `${lead.company_name}-${index}${isSuggested ? '-sug' : ''}`;
-    setSavingKeys(prev => new Set(prev).add(key)); // Instant visual feedback
     await saveLeadToCRM(lead);
     setSavedLeads(new Set(savedLeads).add(key));
-    setSavingKeys(prev => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
   };
 
   const handleDiscard = (lead: any, index: number, isSuggested = false) => {
@@ -64,7 +57,7 @@ export default function LeadFinder() {
             <option value="Other">Other</option>
           </select>
           <input name="query" required type="text" placeholder="e.g. Cashew processors in Vietnam" className="flex-1 border border-border rounded-md p-2 bg-transparent text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
-          <button type="submit" disabled={isPending} className="bg-primary text-primary-foreground px-5 py-2 rounded-md font-medium disabled:opacity-50 whitespace-nowrap active:scale-95 transition-all hover:bg-primary/90">
+          <button type="submit" disabled={isPending} className="bg-primary text-primary-foreground px-5 py-2 rounded-md font-medium disabled:opacity-50 whitespace-nowrap transition-colors hover:bg-primary/90">
             {isPending ? "Generating..." : "Find Leads"}
           </button>
         </form>
@@ -82,9 +75,8 @@ export default function LeadFinder() {
             const isSuggested = !leadsToDisplay;
             const key = `${lead.company_name}-${index}${isSuggested ? '-sug' : ''}`;
             if (discardedLeads.has(key)) return null;
-            
+
             const isSaved = savedLeads.has(key);
-            const isSaving = savingKeys.has(key);
 
             return (
               <div key={key} className={`bg-card p-5 rounded-xl border ${isSaved ? 'border-success bg-success/5' : 'border-border'} transition-colors relative`}>
@@ -105,7 +97,7 @@ export default function LeadFinder() {
                     <p className="italic mt-2 text-[13px] bg-background p-2 rounded border border-border">"{lead.message}"</p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   {isSaved ? (
                     <button disabled className="flex-1 bg-success/20 text-success py-2 rounded-md font-medium flex items-center justify-center gap-2 text-sm">
@@ -113,21 +105,15 @@ export default function LeadFinder() {
                     </button>
                   ) : (
                     <>
-                      <button 
+                      <button
                         onClick={() => handleSave(lead, index, isSuggested)}
-                        disabled={isSaving}
-                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 py-2 rounded-md font-medium flex items-center justify-center gap-2 text-sm active:scale-[0.98] transition-all disabled:opacity-70"
+                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 py-2 rounded-md font-medium flex items-center justify-center gap-2 text-sm transition-colors"
                       >
-                        {isSaving ? (
-                          "Adding..."
-                        ) : (
-                          <><Plus className="w-4 h-4" /> Add to CRM</>
-                        )}
+                        <Plus className="w-4 h-4" /> Add to CRM
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDiscard(lead, index, isSuggested)}
-                        disabled={isSaving}
-                        className="px-3 bg-secondary text-secondary-foreground hover:bg-destructive/10 hover:text-destructive py-2 rounded-md font-medium flex items-center justify-center active:scale-95 transition-all disabled:opacity-50"
+                        className="px-3 bg-secondary text-secondary-foreground hover:bg-destructive/10 hover:text-destructive py-2 rounded-md font-medium flex items-center justify-center transition-colors"
                         title="Discard"
                       >
                         <X className="w-4 h-4" />
