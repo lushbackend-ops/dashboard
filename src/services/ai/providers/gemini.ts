@@ -75,6 +75,7 @@ export class GeminiProvider implements AIProvider {
     while (retries > 0) {
       try {
         const ai = this.ais[this.currentKeyIndex];
+        const key = this.keys[this.currentKeyIndex];
         const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
