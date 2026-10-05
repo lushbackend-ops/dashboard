@@ -6,11 +6,11 @@ import { revalidatePath } from "next/cache";
 export async function findLeads(prevState: any, formData: FormData) {
   const query = formData.get("query") as string;
   const category = formData.get("category") as string || "General B2B";
-  
+
   if (!process.env.AI_PROVIDER_API_KEY) {
     throw new Error("AI Provider API key not configured.");
   }
-  
+
   const ai = getAIProvider();
   let data = null;
 
@@ -21,7 +21,7 @@ export async function findLeads(prevState: any, formData: FormData) {
         company_name: string;
         contact_email: string;
         phone: string;
-        location:string;
+        location: string;
         product: string;
         message: string;
       }>
@@ -41,13 +41,13 @@ export async function findLeads(prevState: any, formData: FormData) {
     }
     return { success: false, leads: null, error: errorMessage };
   }
-  
+
   if (!data || !data.leads || data.leads.length === 0) {
     return { success: false, leads: null, error: "AI returned an empty list. Try a different query." };
   }
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     leads: data.leads
   };
 }
@@ -73,7 +73,7 @@ export async function saveLeadToCRM(lead: {
   if (error) {
     throw new Error(error.message);
   }
-  
+
   revalidatePath("/");
   revalidatePath("/crm");
 }

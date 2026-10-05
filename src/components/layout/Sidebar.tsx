@@ -12,7 +12,8 @@ import {
   Megaphone,
   MessageSquare,
   BarChart3,
-  Settings
+  Settings,
+  Wand2
 } from "lucide-react";
 
 export function Sidebar() {
@@ -29,6 +30,7 @@ export function Sidebar() {
     { name: "Campaigns", href: "/campaigns", icon: Megaphone },
     { name: "Outreach", href: "/outreach", icon: MessageSquare },
     { name: "Website AI", href: "/website-ai", icon: BrainCircuit },
+    { name: "AI Studio", href: "/ai-studio", icon: Wand2 },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
   ];
 

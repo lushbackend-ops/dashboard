@@ -112,7 +112,7 @@ export default function LeadFinder() {
             const isSuggested = !leadsToDisplay;
             const key = `${lead.company_name}-${index}${isSuggested ? '-sug' : ''}`;
             if (discardedLeads.has(key)) return null;
-            
+
             const isSaved = savedLeads.has(key);
             const isSaving = savingKeys.has(key);
 
@@ -136,7 +136,7 @@ export default function LeadFinder() {
                     <p className="italic mt-2 text-[13px] bg-background p-2 rounded border border-border">"{lead.message}"</p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   {isSaved ? (
                     <button disabled className="flex-1 bg-success/20 text-success py-2 rounded-md font-medium flex items-center justify-center gap-2 text-sm">
@@ -144,7 +144,7 @@ export default function LeadFinder() {
                     </button>
                   ) : (
                     <>
-                      <button 
+                      <button
                         onClick={() => handleSave(lead, index, isSuggested)}
                         disabled={isSaving}
                         className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 py-2 rounded-md font-medium flex items-center justify-center gap-2 text-sm active:scale-[0.98] transition-all disabled:opacity-70"
@@ -155,7 +155,7 @@ export default function LeadFinder() {
                           <><Plus className="w-4 h-4" /> Add to CRM</>
                         )}
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDiscard(lead, index, isSuggested)}
                         disabled={isSaving}
                         className="px-3 bg-secondary text-secondary-foreground hover:bg-destructive/10 hover:text-destructive py-2 rounded-md font-medium flex items-center justify-center active:scale-95 transition-all disabled:opacity-50"

@@ -1,15 +1,22 @@
 import { createClient } from "@/utils/supabase/server";
 import { Mail, Phone, Box, Calendar } from "lucide-react";
 import DeleteButton from "./DeleteButton";
+import { EmailComposer } from "./EmailComposer";
 
 export const dynamic = "force-dynamic";
 
-export default async function CRM() {
+export default async function CRM(props: { searchParams: Promise<{ status?: string }> }) {
+  const searchParams = await props.searchParams;
+  const statusFilter = searchParams.status || "All";
+  
   const supabase = await createClient();
-  const { data: leads, error } = await supabase
-    .from("leads")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let query = supabase.from("leads").select("*").order("created_at", { ascending: false });
+  
+  if (statusFilter !== "All") {
+    query = query.eq("status", statusFilter);
+  }
+  
+  const { data: leads, error } = await query;
 
   if (error) {
     console.error("Error fetching leads:", error.message);
@@ -24,6 +31,21 @@ export default async function CRM() {
           <h1 className="text-2xl font-semibold text-foreground">Lead CRM</h1>
           <p className="text-secondary-foreground text-sm">Manage and track your incoming leads</p>
         </div>
+        <form method="GET" className="flex items-center gap-2">
+          <label htmlFor="status" className="text-sm text-secondary-foreground">Filter:</label>
+          <select 
+            name="status" 
+            id="status" 
+            defaultValue={statusFilter}
+            className="border border-border rounded-md p-1.5 text-sm bg-card text-foreground focus:outline-none"
+          >
+            <option value="All">All</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Qualified">Qualified</option>
+          </select>
+          <button type="submit" className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium">Apply</button>
+        </form>
       </div>
       
       {allLeads.length === 0 ? (
@@ -39,6 +61,11 @@ export default async function CRM() {
                   {lead.company_name}
                 </h3>
                 <div className="flex items-center gap-2">
+                  {lead.score && (
+                    <span className="px-2 py-0.5 bg-success/10 text-success text-[10px] uppercase font-bold rounded border border-success/20 shrink-0">
+                      Score: {lead.score}
+                    </span>
+                  )}
                   <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] uppercase font-bold rounded border border-primary/20 shrink-0">
                     {lead.status || "New"}
                   </span>
@@ -63,6 +90,29 @@ export default async function CRM() {
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                   <span>{new Date(lead.created_at).toLocaleDateString()}</span>
                 </div>
+                <details className="mt-3 group border-t border-dashed border-border/50 pt-2">
+                  <summary className="text-[12px] font-medium text-primary cursor-pointer list-none select-none">
+                    <span className="group-open:hidden">▶ View full details</span>
+                    <span className="hidden group-open:inline">▼ Hide details</span>
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <div className="text-[12px]">
+                      <span className="font-semibold text-foreground block mb-1">Product Category:</span>
+                      <span className="text-secondary-foreground">{lead.product || "N/A"}</span>
+                    </div>
+                    <div className="text-[12px]">
+                      <span className="font-semibold text-foreground block mb-1">Location:</span>
+                      <span className="text-secondary-foreground">{lead.location || "N/A"}</span>
+                    </div>
+                    <div className="text-[12px]">
+                      <span className="font-semibold text-foreground block mb-1">Full Message:</span>
+                      <div className="text-foreground/90 bg-secondary/10 p-2.5 rounded border border-border/50 italic whitespace-pre-wrap">
+                        {lead.message || "No additional message."}
+                      </div>
+                    </div>
+                    <EmailComposer email={lead.contact_email} company={lead.company_name} />
+                  </div>
+                </details>
               </div>
             </div>
           ))}
