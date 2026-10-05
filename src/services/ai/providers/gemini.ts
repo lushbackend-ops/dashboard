@@ -2,16 +2,17 @@ import { GoogleGenAI } from "@google/genai";
 import { AIContext, AIProvider, AnalysisResult, ResearchResult } from "../types";
 import { logUsage } from "../../usageTracker";
 
+let globalKeyIndex = 0;
+
 export class GeminiProvider implements AIProvider {
   private ais: GoogleGenAI[];
   private keys: string[];
-  private currentKeyIndex = 0;
 
   constructor() {
-    let keys = [process.env.AI_PROVIDER_API_KEY].filter(Boolean) as string[];
+    let keys = [process.env.AI_PROVIDER_API_KEY].filter(Boolean).map(k => k!.replace(/"/g, '')) as string[];
     
     if (process.env.AI_PROVIDER_API_KEYS) {
-      const splitKeys = process.env.AI_PROVIDER_API_KEYS.split(",").map(k => k.trim()).filter(Boolean);
+      const splitKeys = process.env.AI_PROVIDER_API_KEYS.split(",").map(k => k.trim().replace(/"/g, '')).filter(Boolean);
       if (splitKeys.length > 0) {
         keys = splitKeys;
       }
@@ -25,20 +26,20 @@ export class GeminiProvider implements AIProvider {
 
   async generateText(prompt: string, context?: AIContext): Promise<string> {
     let retries = Math.max(3, this.ais.length);
-    let delay = 3000;
+    let delay = 1000;
     let lastError: any = null;
     while (retries > 0) {
       try {
-        const ai = this.ais[this.currentKeyIndex];
-        const key = this.keys[this.currentKeyIndex];
+        const ai = this.ais[globalKeyIndex];
+        const key = this.keys[globalKeyIndex];
+        
+        const config: any = { temperature: context?.temperature || 0.7 };
+        if (context?.systemPrompt) config.systemInstruction = context.systemPrompt;
         
         const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
-          config: {
-            systemInstruction: context?.systemPrompt,
-            temperature: context?.temperature || 0.7,
-          },
+          config,
         });
         
         await logUsage(key);
@@ -49,8 +50,8 @@ export class GeminiProvider implements AIProvider {
         const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
         
         if (isQuotaError && this.ais.length > 1) {
-          console.warn(`[Key ${this.currentKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
-          this.currentKeyIndex = (this.currentKeyIndex + 1) % this.ais.length;
+          console.warn(`[Key ${globalKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
+          globalKeyIndex = (globalKeyIndex + 1) % this.ais.length;
           retries--;
           continue; // Retry instantly with the new key
         }
@@ -70,20 +71,22 @@ export class GeminiProvider implements AIProvider {
 
   async generateStructuredOutput<T>(prompt: string, schema: unknown, context?: AIContext): Promise<T> {
     let retries = Math.max(3, this.ais.length);
-    let delay = 3000;
+    let delay = 1000;
     let lastError: any = null;
     while (retries > 0) {
       try {
-        const ai = this.ais[this.currentKeyIndex];
-        const key = this.keys[this.currentKeyIndex];
+        const ai = this.ais[globalKeyIndex];
+        const key = this.keys[globalKeyIndex];
+        const config: any = {
+          temperature: context?.temperature || 0.1,
+          responseMimeType: "application/json",
+        };
+        if (context?.systemPrompt) config.systemInstruction = context.systemPrompt;
+
         const response = await ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: prompt,
-          config: {
-            systemInstruction: context?.systemPrompt,
-            temperature: context?.temperature || 0.1,
-            responseMimeType: "application/json",
-          },
+          config,
         });
         
         await logUsage(key);
@@ -97,8 +100,8 @@ export class GeminiProvider implements AIProvider {
         const isQuotaError = error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429");
         
         if (isQuotaError && this.ais.length > 1) {
-          console.warn(`[Key ${this.currentKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
-          this.currentKeyIndex = (this.currentKeyIndex + 1) % this.ais.length;
+          console.warn(`[Key ${globalKeyIndex + 1}/${this.ais.length}] Quota exceeded. Rotating to next key...`);
+          globalKeyIndex = (globalKeyIndex + 1) % this.ais.length;
           retries--;
           continue;
         }
@@ -118,7 +121,7 @@ export class GeminiProvider implements AIProvider {
   }
 
   async createEmbedding(text: string): Promise<number[]> {
-    const ai = this.ais[this.currentKeyIndex];
+    const ai = this.ais[globalKeyIndex];
     const response = await ai.models.embedContent({
       model: "text-embedding-004",
       contents: text,

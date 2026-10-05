@@ -22,7 +22,6 @@ export function Sidebar() {
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "AI Brain", href: "/brain", icon: BrainCircuit },
-    { name: "Content Studio", href: "/content", icon: PenTool },
     { name: "Creative Studio", href: "/creative", icon: Video },
     { name: "Market Intelligence", href: "/research", icon: Globe2 },
     { name: "Lead Finder", href: "/leads/finder", icon: Users },
@@ -30,7 +29,6 @@ export function Sidebar() {
     { name: "Campaigns", href: "/campaigns", icon: Megaphone },
     { name: "Outreach", href: "/outreach", icon: MessageSquare },
     { name: "Website AI", href: "/website-ai", icon: BrainCircuit },
-    { name: "AI Studio", href: "/ai-studio", icon: Wand2 },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
   ];
 

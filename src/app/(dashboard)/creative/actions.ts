@@ -9,7 +9,20 @@ export async function generateCreative(prevState: any, formData: FormData) {
   const ai = getAIProvider();
   
   try {
-    const result = await ai.generateText(`Create a ${type} for Lush Trade Corp based on this concept: ${concept}. Keep it engaging and professional for B2B commodity trading.`);
+    const additionalInfo = formData.get("additionalInfo") as string;
+    const prompt = `You are the lead social media manager for Lush Trade Corp (a B2B commodities trader).
+    Create content for a ${type} about: ${concept}.
+    Additional info: ${additionalInfo || "None"}
+    
+    Return exactly this format:
+    
+    [CAPTION]
+    (Write an engaging, professional caption with hashtags)
+    
+    [AI GENERATOR PROMPT]
+    (Write a highly detailed prompt that the user can copy/paste into Midjourney or Runway to generate the perfect image/video for this post. Include Lush Trade Corp branding guidelines: premium, cinematic, professional, global trade, rich colors.)`;
+
+    const result = await ai.generateText(prompt);
     return { success: true, result };
   } catch (error: any) {
     console.error("AI Creative Error:", error);

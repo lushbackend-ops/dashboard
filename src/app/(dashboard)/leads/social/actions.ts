@@ -1,53 +1,23 @@
 "use server";
-import { getAIProvider } from "@/services/ai";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function findLeads(prevState: any, formData: FormData) {
   const query = formData.get("query") as string;
-  const category = formData.get("category") as string || "General B2B";
-
-  if (!process.env.AI_PROVIDER_API_KEY) {
-    throw new Error("AI Provider API key not configured.");
-  }
-
-  const ai = getAIProvider();
-  let data = null;
-
-  try {
-    // Ask AI to generate realistic mock leads
-    data = await ai.generateStructuredOutput<{
-      leads: Array<{
-        company_name: string;
-        contact_email: string;
-        phone: string;
-        product: string;
-        message: string;
-      }>
-    }>(
-      `Generate 3 highly realistic, professional B2B leads based on this market query: "${query}" in the "${category}" industry.
-       Make them look like real companies operating in the ${category} sector. 
-       Return JSON with an array called "leads". Each lead must have company_name, contact_email, phone, product, and message.`,
-      null
-    );
-  } catch (error: any) {
-    console.error("AI Error:", error);
-    let errorMessage = "Failed to generate leads with AI.";
-    if (error?.status === 429 || error?.message?.includes("quota") || error?.message?.includes("429")) {
-      errorMessage = "Google AI Quota Exceeded! Your free API key is out of credits for today. Please wait until tomorrow or upgrade your Gemini API plan.";
-    } else {
-      errorMessage = `AI Error: ${error?.message || "Unknown error occurred"}`;
-    }
-    return { success: false, leads: null, error: errorMessage };
-  }
-
-  if (!data || !data.leads || data.leads.length === 0) {
-    return { success: false, leads: null, error: "AI returned an empty list. Try a different query." };
-  }
-
+  
+  // Return mocked leads
   return {
     success: true,
-    leads: data.leads
+    error: undefined,
+    leads: [
+      {
+        company_name: "Mock Company Ltd",
+        contact_email: "mock@company.com",
+        phone: "+1234567890",
+        product: "Mock Product",
+        message: "This is a mocked lead (AI disabled)"
+      }
+    ]
   };
 }
 

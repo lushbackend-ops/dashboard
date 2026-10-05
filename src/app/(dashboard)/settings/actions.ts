@@ -13,7 +13,7 @@ export async function getApiKeysAndUsage() {
       id: index + 1,
       key: key,
       maskedKey: key.substring(0, 8) + "..." + key.substring(key.length - 4),
-      limit: 1500,
+      limit: 20,
       stats
     };
   }));
