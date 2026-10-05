@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { jobId: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ jobId: string }> }) {
   // In a real application, fetch job status from DB
+  const params = await props.params;
   const { jobId } = params;
 
   // Mocking completion
