@@ -23,13 +23,12 @@ export function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "AI Brain", href: "/brain", icon: BrainCircuit },
     { name: "Creative Studio", href: "/creative", icon: Video },
-    { name: "Market Intelligence", href: "/research", icon: Globe2 },
+    { name: "Market Intelligence(coming soon)", href: "/research", icon: Globe2 },
     { name: "Lead Finder", href: "/leads/finder", icon: Users },
     { name: "CRM & Scoring", href: "/crm", icon: Users },
-    { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-    { name: "Outreach", href: "/outreach", icon: MessageSquare },
-    { name: "Website AI", href: "/website-ai", icon: BrainCircuit },
-    { name: "Analytics", href: "/analytics", icon: BarChart3 },
+    { name: "Campaigns(coming soon)", href: "/campaigns", icon: Megaphone },
+    { name: "Website AI(coming soon)", href: "/website-ai", icon: BrainCircuit },
+    { name: "Analytics(coming soon)", href: "/analytics", icon: BarChart3 },
   ];
 
   return (
