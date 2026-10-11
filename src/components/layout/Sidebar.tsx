@@ -13,7 +13,8 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  Wand2
+  Wand2,
+  Share2
 } from "lucide-react";
 
 export function Sidebar() {
@@ -23,6 +24,7 @@ export function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "AI Brain", href: "/brain", icon: BrainCircuit },
     { name: "Creative Studio", href: "/creative", icon: Video },
+    { name: "Social Publisher", href: "/social-publisher", icon: Share2 },
     { name: "Market Intelligence(coming soon)", href: "/research", icon: Globe2 },
     { name: "Lead Finder", href: "/leads/finder", icon: Users },
     { name: "CRM & Scoring", href: "/crm", icon: Users },

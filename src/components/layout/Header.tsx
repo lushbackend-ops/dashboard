@@ -15,7 +15,8 @@ import {
   Users,
   Megaphone,
   BarChart3,
-  Settings
+  Settings,
+  Share2
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 
@@ -27,6 +28,7 @@ export function Header() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "AI Brain", href: "/brain", icon: BrainCircuit },
     { name: "Creative Studio", href: "/creative", icon: Video },
+    { name: "Social Publisher", href: "/social-publisher", icon: Share2 },
     { name: "Market Intelligence(coming soon)", href: "/research", icon: Globe2 },
     { name: "Lead Finder", href: "/leads/finder", icon: Users },
     { name: "CRM & Scoring", href: "/crm", icon: Users },
