@@ -91,6 +91,36 @@ export async function processPostPublishing(post: SocialPost): Promise<{
     }
 
     const decryptedToken = decryptToken(rawAccount.encrypted_access_token);
+    if (!decryptedToken) {
+      const errRes: SocialPublishResult = {
+        platform,
+        success: false,
+        errorCode: 'DECRYPTION_FAILED',
+        errorMessage: 'Unable to decrypt access token. Please ensure SOCIAL_TOKEN_ENCRYPTION_KEY is set in Vercel Environment Variables, or re-enter the account token.'
+      };
+      results.push(errRes);
+
+      await supabase
+        .from('social_post_targets')
+        .update({
+          status: 'FAILED',
+          attempt_count: (target.attempt_count || 0) + 1,
+          last_attempt_at: new Date().toISOString(),
+          error_code: errRes.errorCode,
+          error_message: errRes.errorMessage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', target.id);
+
+      await supabase.from('social_publish_logs').insert({
+        target_id: target.id,
+        attempt_number: (target.attempt_count || 0) + 1,
+        status: 'FAILED',
+        safe_details: { error: errRes.errorMessage }
+      });
+      continue;
+    }
+
     let pubResult: SocialPublishResult;
 
     // Mark target as PROCESSING

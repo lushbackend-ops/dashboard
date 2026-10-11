@@ -42,15 +42,20 @@ export function decryptToken(encryptedString: string): string {
     return encryptedString;
   }
   
-  const [ivHex, cipherHex, tagHex] = parts;
-  const key = getEncryptionKey();
-  const iv = Buffer.from(ivHex, 'hex');
-  const tag = Buffer.from(tagHex, 'hex');
-  
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(tag);
-  
-  let decrypted = decipher.update(cipherHex, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
+  try {
+    const [ivHex, cipherHex, tagHex] = parts;
+    const key = getEncryptionKey();
+    const iv = Buffer.from(ivHex, 'hex');
+    const tag = Buffer.from(tagHex, 'hex');
+    
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(tag);
+    
+    let decrypted = decipher.update(cipherHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (err: any) {
+    console.error('Failed to decrypt token (check SOCIAL_TOKEN_ENCRYPTION_KEY):', err?.message || err);
+    return '';
+  }
 }
