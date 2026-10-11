@@ -14,6 +14,7 @@ import {
 import { SocialConnectedAccount, SocialPlatformType } from '@/services/social/types';
 import { disconnectAccount, connectAccountManually } from '@/app/(dashboard)/social-publisher/actions';
 import { Key } from 'lucide-react';
+import { InstagramLogo, FacebookLogo, LinkedInLogo } from './SocialIcons';
 
 interface ConnectedAccountsViewProps {
   accounts: SocialConnectedAccount[];
@@ -125,11 +126,13 @@ export function ConnectedAccountsView({ accounts, onRefresh }: ConnectedAccounts
             >
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-sm ${
-                    p.color.startsWith('from-') ? `bg-gradient-to-tr ${p.color}` : p.color
-                  }`}>
-                    {p.id === 'INSTAGRAM' ? 'IG' : p.id === 'FACEBOOK_PAGE' ? 'FB' : 'in'}
-                  </div>
+                  {p.id === 'INSTAGRAM' ? (
+                    <InstagramLogo className="w-12 h-12 shadow-sm rounded-2xl overflow-hidden" />
+                  ) : p.id === 'FACEBOOK_PAGE' ? (
+                    <FacebookLogo className="w-12 h-12 shadow-sm" />
+                  ) : (
+                    <LinkedInLogo className="w-12 h-12 shadow-sm rounded-2xl overflow-hidden" />
+                  )}
 
                   <span
                     className={`px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 ${

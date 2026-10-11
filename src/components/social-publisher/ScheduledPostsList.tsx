@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { SocialPost } from '@/services/social/types';
 import { cancelScheduledPost, reschedulePost, deleteSocialPost } from '@/app/(dashboard)/social-publisher/actions';
+import { InstagramLogo, FacebookLogo, LinkedInLogo } from './SocialIcons';
 
 interface ScheduledPostsListProps {
   posts: SocialPost[];
@@ -167,9 +168,12 @@ export function ScheduledPostsList({ posts, onRefresh }: ScheduledPostsListProps
                       {post.targets?.map((t) => (
                         <span
                           key={t.id}
-                          className="px-2 py-0.5 rounded-full text-[10px] bg-secondary text-secondary-foreground font-medium"
+                          className="px-2 py-0.5 rounded-full text-[10px] bg-secondary text-secondary-foreground font-medium flex items-center gap-1.5"
                         >
-                          {t.platform}
+                          {t.platform === 'INSTAGRAM' && <InstagramLogo className="w-3.5 h-3.5 shrink-0 rounded-xs" />}
+                          {t.platform === 'FACEBOOK_PAGE' && <FacebookLogo className="w-3.5 h-3.5 shrink-0" />}
+                          {t.platform === 'LINKEDIN_ORG' && <LinkedInLogo className="w-3.5 h-3.5 shrink-0 rounded-xs" />}
+                          <span>{t.platform === 'FACEBOOK_PAGE' ? 'Facebook' : t.platform === 'INSTAGRAM' ? 'Instagram' : 'LinkedIn'}</span>
                         </span>
                       ))}
                     </div>

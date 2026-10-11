@@ -23,6 +23,7 @@ import {
 import { DateTimePicker } from './DateTimePicker';
 import { createSocialPost } from '@/app/(dashboard)/social-publisher/actions';
 import { createClient } from '@/utils/supabase/client';
+import { InstagramLogo, FacebookLogo, LinkedInLogo } from './SocialIcons';
 
 interface CreatePostComposerProps {
   connectedAccounts: SocialConnectedAccount[];
@@ -36,7 +37,7 @@ export function CreatePostComposer({
   onNavigateToAccounts
 }: CreatePostComposerProps) {
   const [caption, setCaption] = useState('');
-  const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatformType[]>(['FACEBOOK_PAGE']);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatformType[]>([]);
   const [mediaItems, setMediaItems] = useState<SocialMediaItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [publishMode, setPublishMode] = useState<'NOW' | 'SCHEDULE'>('SCHEDULE');
@@ -278,9 +279,7 @@ export function CreatePostComposer({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                      IG
-                    </div>
+                    <InstagramLogo className="w-10 h-10 shrink-0 shadow-sm rounded-xl overflow-hidden" />
                     <div>
                       <h4 className="text-sm font-semibold text-foreground">Instagram</h4>
                       <p className="text-xs text-secondary-foreground">
@@ -335,9 +334,7 @@ export function CreatePostComposer({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                      FB
-                    </div>
+                    <FacebookLogo className="w-10 h-10 shrink-0 shadow-sm" />
                     <div>
                       <h4 className="text-sm font-semibold text-foreground">Facebook Page</h4>
                       <p className="text-xs text-secondary-foreground">
@@ -392,9 +389,7 @@ export function CreatePostComposer({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#0077b5] flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                      in
-                    </div>
+                    <LinkedInLogo className="w-10 h-10 shrink-0 shadow-sm rounded-xl overflow-hidden" />
                     <div>
                       <h4 className="text-sm font-semibold text-foreground">LinkedIn Org</h4>
                       <p className="text-xs text-secondary-foreground truncate max-w-[140px]">

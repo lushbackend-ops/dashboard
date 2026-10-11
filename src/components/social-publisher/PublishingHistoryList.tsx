@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { SocialPost } from '@/services/social/types';
 import { deleteSocialPost } from '@/app/(dashboard)/social-publisher/actions';
+import { InstagramLogo, FacebookLogo, LinkedInLogo } from './SocialIcons';
 
 interface PublishingHistoryListProps {
   posts: SocialPost[];
@@ -181,8 +182,11 @@ export function PublishingHistoryList({ posts, onRefresh }: PublishingHistoryLis
                           className="py-2 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="font-semibold text-foreground w-28">
-                              {t.platform}
+                            {t.platform === 'INSTAGRAM' && <InstagramLogo className="w-4 h-4 shrink-0 rounded-xs" />}
+                            {t.platform === 'FACEBOOK_PAGE' && <FacebookLogo className="w-4 h-4 shrink-0" />}
+                            {t.platform === 'LINKEDIN_ORG' && <LinkedInLogo className="w-4 h-4 shrink-0 rounded-xs" />}
+                            <span className="font-semibold text-foreground">
+                              {t.platform === 'FACEBOOK_PAGE' ? 'Facebook Page' : t.platform === 'INSTAGRAM' ? 'Instagram' : 'LinkedIn Org'}
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
