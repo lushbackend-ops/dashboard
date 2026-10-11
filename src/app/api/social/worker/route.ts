@@ -14,10 +14,33 @@ export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
     const secret = process.env.SOCIAL_SCHEDULER_SECRET;
-    const isSameOrigin = req.headers.get('sec-fetch-site') === 'same-origin' || req.headers.get('host')?.startsWith('localhost');
+    const cronSecret = process.env.CRON_SECRET;
+    
+    const host = req.headers.get('host') || '';
+    const origin = req.headers.get('origin') || '';
+    const referer = req.headers.get('referer') || '';
+    const secFetchSite = req.headers.get('sec-fetch-site');
 
-    // Security check: If secret is configured and not same-origin, require secret match
-    if (secret && !isSameOrigin && authHeader !== `Bearer ${secret}`) {
+    const isSameOrigin = 
+      secFetchSite === 'same-origin' || 
+      (origin && host && origin.includes(host)) ||
+      (referer && host && referer.includes(host)) ||
+      host.startsWith('localhost') ||
+      host.startsWith('127.0.0.1');
+
+    const isVercelCron = 
+      req.headers.get('user-agent')?.includes('vercel-cron') ||
+      req.headers.get('x-vercel-cron') === '1' ||
+      (cronSecret && authHeader === `Bearer ${cronSecret}`);
+
+    const isAuthorized = 
+      isSameOrigin || 
+      isVercelCron || 
+      !secret || 
+      authHeader === `Bearer ${secret}`;
+
+    // Security check
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized scheduler trigger.' }, { status: 401 });
     }
 
@@ -37,6 +60,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  // Allow GET for Vercel Cron default invocation if authorized
+  // Allow GET for Vercel Cron default invocation
   return POST(req);
 }

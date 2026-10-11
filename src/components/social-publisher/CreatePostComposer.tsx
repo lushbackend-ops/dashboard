@@ -44,13 +44,13 @@ export function CreatePostComposer({
   // Default to tomorrow 18:30 IST
   const [scheduledAtUtc, setScheduledAtUtc] = useState<string | null>(() => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const dateStr = tomorrow.toISOString().split('T')[0];
+    const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tomorrow);
     const local = `${dateStr}T18:30:00+05:30`;
     return new Date(local).toISOString();
   });
   const [scheduledDisplay, setScheduledDisplay] = useState<string>(() => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const dateStr = tomorrow.toISOString().split('T')[0];
+    const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tomorrow);
     const local = `${dateStr}T18:30:00+05:30`;
     return new Date(local).toLocaleString('en-IN', {
       timeZone: 'Asia/Kolkata',

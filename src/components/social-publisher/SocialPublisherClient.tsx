@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   PlusCircle, 
   CalendarClock, 
@@ -30,6 +30,34 @@ export function SocialPublisherClient({
 }: SocialPublisherClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  // Background poller: automatically processes scheduled posts that have become due
+  useEffect(() => {
+    let isCancelled = false;
+
+    const checkDuePosts = async () => {
+      try {
+        const res = await fetch('/api/social/worker', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.summary?.postsClaimed > 0 && !isCancelled) {
+            router.refresh();
+          }
+        }
+      } catch {
+        // silent background check
+      }
+    };
+
+    // Run check on mount and every 20 seconds
+    checkDuePosts();
+    const interval = setInterval(checkDuePosts, 20000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [router]);
 
   const tabs = [
     { id: 'create', label: 'Create Post', icon: PlusCircle },
