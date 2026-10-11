@@ -314,17 +314,43 @@ export class MetaPublisherAdapter {
         creationId = containerData.id;
       }
 
-      // Step 3: Publish the container
-      const publishRes = await fetch(`${this.GRAPH_API_BASE}/${igUserId}/media_publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_token: accessToken,
-          creation_id: creationId
-        })
-      });
-      const publishData = await publishRes.json();
-      if (!publishRes.ok || publishData.error) {
+      // Step 2b: Wait for container to finish downloading and processing from CDN
+      await this.waitForInstagramContainerReady(creationId, accessToken, 10, 2000);
+
+      // Step 3: Publish the container with automatic retry for code 9007 (media still processing)
+      let publishData: any = null;
+      let publishOk = false;
+      const maxPublishAttempts = 4;
+
+      for (let attempt = 1; attempt <= maxPublishAttempts; attempt++) {
+        const publishRes = await fetch(`${this.GRAPH_API_BASE}/${igUserId}/media_publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: accessToken,
+            creation_id: creationId
+          })
+        });
+        publishData = await publishRes.json();
+
+        if (publishRes.ok && publishData.id) {
+          publishOk = true;
+          break;
+        }
+
+        // If error is 9007 (Media ID is not available), wait and retry
+        const isNotReady = publishData.error?.code === 9007 || 
+          publishData.error?.message?.toLowerCase().includes('media id is not available');
+
+        if (isNotReady && attempt < maxPublishAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          continue;
+        }
+
+        break;
+      }
+
+      if (!publishOk || publishData.error) {
         return {
           platform: 'INSTAGRAM',
           success: false,
@@ -352,20 +378,24 @@ export class MetaPublisherAdapter {
     creationId: string, 
     accessToken: string,
     maxRetries = 10,
-    delayMs = 3000
+    delayMs = 2000
   ): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
-      const res = await fetch(`${this.GRAPH_API_BASE}/${creationId}?fields=status_code&access_token=${accessToken}`);
-      const data = await res.json();
-      if (data.status_code === 'FINISHED') {
-        return true;
+      try {
+        const res = await fetch(`${this.GRAPH_API_BASE}/${creationId}?fields=status_code&access_token=${accessToken}`);
+        const data = await res.json();
+        if (data.status_code === 'FINISHED') {
+          return true;
+        }
+        if (data.status_code === 'ERROR' || data.status_code === 'EXPIRED') {
+          return false;
+        }
+      } catch {
+        // ignore network hiccups
       }
-      if (data.status_code === 'ERROR' || data.status_code === 'EXPIRED') {
-        return false;
-      }
-      await new Promise(r => setTimeout(r, delayMs));
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    return false;
+    return true;
   }
 
   /**
