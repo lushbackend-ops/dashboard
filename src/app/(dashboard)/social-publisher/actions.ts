@@ -25,6 +25,26 @@ export async function getSocialPublisherData() {
   try {
     const supabase = await createClient();
 
+    // Senior Dev Architecture: Lazy execution pattern.
+    // If any scheduled posts have reached their due timestamp, trigger the worker
+    // to process them immediately so the user always sees fresh, up-to-date status.
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: dueCheck } = await supabase
+        .from('social_posts')
+        .select('id')
+        .eq('status', 'SCHEDULED')
+        .lte('scheduled_at', nowIso)
+        .limit(1);
+
+      if (dueCheck && dueCheck.length > 0) {
+        const { runSocialSchedulerWorker } = await import('@/services/social/worker');
+        await runSocialSchedulerWorker();
+      }
+    } catch (lazyErr: any) {
+      console.warn('[SocialPublisher] Lazy worker check non-critical notice:', lazyErr?.message);
+    }
+
     // 1. Fetch connected accounts (safely mask encrypted tokens)
     const { data: accounts, error: accError } = await supabase
       .from('social_connected_accounts')
